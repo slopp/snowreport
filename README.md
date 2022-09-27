@@ -10,13 +10,15 @@ I've built this same pipeline in [R](https://github.com/slopp/scheduledsnow) and
 More details to come.
 
 A few key notes:
-- My custom bg_io_manager expects the BQ dataset and table to already exist
+- My custom bq_io_manager expects the BQ dataset and table to already exist
 - You'll need to provide GCP SA JSON for the BQ read/write operations, see the repository resource config. Right now the secret key and id are passed as a separate config which can be entered at runtime in the dagit launchpad to avoid commiting those into Git
 - The GCS operations are done using the scopes / IAM privileges of the underlying compute, not the SA account
 
 Areas of improvement:
 - include the date in the report asset key, or even consider using partitions
 - figure out a way to make the definition of assets more DRY
+
+Next up, try to get this running in Dagster Cloud with GKE and branch deployments.
 
 ## To get started
 
