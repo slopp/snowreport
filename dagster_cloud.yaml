@@ -4,4 +4,4 @@ locations:
       package_name: snowreport
     build:
       directory: ./
-      registry:  us-central1-docker.pkg.dev/myhybrid-200215/dagit
+      registry:  us-central1-docker.pkg.dev/myhybrid-200215/dagit/snowreport
