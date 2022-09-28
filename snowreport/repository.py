@@ -20,7 +20,10 @@ def snowreport():
                 "gcs": gcs_resource.configured({
                     "project": "myhybrid-200215"
                 }),
-                "bq_auth": bq_auth, # will need to be configured at runtime
+                "bq_auth": bq_auth.configured({
+                    "sa_private_key_id":  {"env": "SA_PRIVATE_KEY_ID"},
+                    "sa_private_key": {"env": "SA_PRIVATE_KEY"},
+                }), 
                 "bq_io_manager": bq_io_manager.configured({
                     "sa_json": {
                         "type": "service_account",
