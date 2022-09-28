@@ -71,3 +71,38 @@ def bq_io_manager(init_context):
 @resource(config_schema = {"sa_private_key": StringSource, "sa_private_key_id": StringSource})
 def bq_auth(context):
     return(context.resource_config["sa_private_key_id"],context.resource_config["sa_private_key"] )
+
+
+@resource(config_schema=
+    {
+        "dataset": str, 
+        "sa_json": dict, 
+        "project_id": str,
+    },
+    required_resource_keys={"bq_auth"}
+) 
+def bq_writer(init_context):
+    id, key = init_context.resources.bq_auth
+    return BQWriter(id,  key, init_context)
+
+class BQWriter():
+    def __init__(self, sa_private_key_id, sa_private_key, context):
+        self.sa_private_key_id = sa_private_key_id
+        self.sa_private_key = sa_private_key.replace(r'\n', '\n')
+        self.context = context
+
+    def execute_query(self, query):
+        project_id = self.context.resource_config["project_id"]
+        sa_json = {"private_key":self.sa_private_key, "private_key_id": self.sa_private_key_id}
+        sa_json.update(self.context.resource_config["sa_json"])
+        dataset = self.context.resource_config["dataset"]
+
+        credentials = service_account.Credentials.from_service_account_info(sa_json)
+        client = bigquery.Client(credentials=credentials, project=project_id)
+
+        job_config = bigquery.QueryJobConfig()
+        job_config.default_dataset = project_id+"."+dataset
+        
+        
+        query_job = client.query(query,job_config) 
+        query_job.result()  

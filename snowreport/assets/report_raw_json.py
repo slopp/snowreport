@@ -1,9 +1,12 @@
 from dagster import Output, asset, AssetIn
 import pandas as pd
+from datetime import date
+
+today = str(date.today())
 
 @asset(
     required_resource_keys={"snocountry_api"},
-    key_prefix=["raw"],
+    key_prefix=["raw", today],
     io_manager_key="gcs_io_manager",
 )
 def abay(context) -> pd.DataFrame:
@@ -14,7 +17,7 @@ def abay(context) -> pd.DataFrame:
 
 @asset(
     required_resource_keys={"snocountry_api"},
-    key_prefix=["raw"],
+    key_prefix=["raw", today],
     io_manager_key="gcs_io_manager",
 )
 def copper(context) -> pd.DataFrame:
@@ -25,7 +28,7 @@ def copper(context) -> pd.DataFrame:
 
 @asset(
     required_resource_keys={"snocountry_api"},
-    key_prefix=["raw"],
+    key_prefix=["raw", today],
     io_manager_key="gcs_io_manager",
 )
 def breck(context) -> pd.DataFrame:
@@ -36,7 +39,7 @@ def breck(context) -> pd.DataFrame:
 
 @asset(
     required_resource_keys={"snocountry_api"},
-    key_prefix=["raw"],
+    key_prefix=["raw", today],
     io_manager_key="gcs_io_manager",
 )
 def eldora(context) -> pd.DataFrame:
@@ -78,6 +81,7 @@ def resort_summary(context, abay: pd.DataFrame, breck: pd.DataFrame, copper: pd.
             "high_tomorrow": pd.to_numeric(resort['weatherTomorrow_Temperature_High'])	
         })
         resort_summary = resort_summary.append(add_to_summary)
-        print(resort_summary)
+    
     return resort_summary
+
 
