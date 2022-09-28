@@ -6,6 +6,9 @@ if __name__ == "__main__":
         packages=find_packages(exclude=["snowreport_tests"]),
         install_requires=[
             "dagster",
+            "dagit",
+            "dagster-cloud",
+            "dagster-k8s"
             "pandas",
             "dagster-gcp",
             "google.cloud",
