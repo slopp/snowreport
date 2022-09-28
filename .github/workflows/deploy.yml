@@ -2,7 +2,7 @@ name: Hybrid Prod Deployment
 on:
   push:
     branches:
-      - "master"
+      - "main"
 concurrency: 
   # Cancel in-progress deploys to main branch
   group: ${{ github.ref }}
