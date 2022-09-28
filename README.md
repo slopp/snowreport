@@ -11,7 +11,7 @@ More details to come.
 
 A few key notes:
 - My custom bq_io_manager expects the BQ dataset and table to already exist
-- You'll need to provide GCP SA JSON for the BQ read/write operations, see the repository resource config. Right now the secret key and id are passed as a separate config which can be entered at runtime in the dagit launchpad to avoid commiting those into Git
+- You'll need to provide GCP SA JSON for the BQ read/write operations, see the repository resource config. Right now the secret key and id are made available through environment variables.
 - The GCS operations are done using the scopes / IAM privileges of the underlying compute, not the SA account
 
 Areas of improvement:
@@ -25,6 +25,8 @@ Next up, try to get this running in Dagster Cloud with GKE and branch deployment
 After cloning this repo you can run `pip install .[dev]`. 
 
 Then modify the repository.py resource config as appropriate.
+
+Ensure you have `SA_PRIVATE_KEY` and `SA_PRIVATE_KEY_ID` set.
 
 Then run `dagit`. 
 
