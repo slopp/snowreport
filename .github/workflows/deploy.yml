@@ -42,14 +42,12 @@ jobs:
           ref: ${{ github.head_ref }}
 
       # Setup gcloud CLI
-      - uses: google-github-actions/setup-gcloud@94337306dda8180d967a56932ceb4ddcf01edae7
+      - name: Login to GAR
+        uses: docker/login-action@v2
         with:
-          service_account_key: ${{ secrets.GCP_SA_JSON }}
-          project_id: 'myhyrbid-200215'
-      
-      - name: Docker configuration
-        run: |-
-          gcloud --quiet auth configure-docker  https://us-central1-docker.pkg.dev
+          registry: uscentral1-docker.pkg.dev
+          username: _json_key
+          password: ${{ secrets.GCP_SA_JSON }}
           
 
       - name: Build and deploy to Dagster Cloud hybrid
