@@ -8,7 +8,7 @@ if __name__ == "__main__":
             "dagster",
             "dagit",
             "dagster-cloud",
-            "dagster-k8s"
+            "dagster-k8s",
             "pandas",
             "dagster-gcp",
             "google.cloud",
