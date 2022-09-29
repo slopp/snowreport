@@ -64,6 +64,7 @@ resource_defs = {
                 "gcs": gcs_resource.configured({"project": "fake"}),
                 "bq_auth": bq_auth_fake,
                 "bq_io_manager": fs_io_manager,
+                "bq_writer": bq_auth_fake
         },
     "branch": 
         {
@@ -99,11 +100,7 @@ resource_defs = {
 all_assets = [*resort_assets, resort_summary]
 asset_job = define_asset_job("asset_job", AssetSelection.groups("default"))
 resort_clean_job = resort_clean.to_job(resource_defs=resource_defs[DEPLOYMENT])
-
-if DEPLOYMENT != "local": 
-    all_jobs = [resort_clean_job, asset_job]
-else:
-    all_jobs = [asset_job]    
+   
 
 ###################
 # Schedules & Sensors
@@ -127,7 +124,6 @@ def my_asset_sensor(context: SensorEvaluationContext, asset_event: EventLogEntry
     )
 
 
-
 ###################
 # Repository
 ###################
@@ -136,7 +132,7 @@ def my_asset_sensor(context: SensorEvaluationContext, asset_event: EventLogEntry
 def snowreport():
     definitions = [
         with_resources(all_assets,resource_defs[DEPLOYMENT]), 
-        all_jobs,
+        [resort_clean_job, asset_job],
         [daily_schedule],
         [my_asset_sensor]
     ]
