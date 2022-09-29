@@ -1,10 +1,16 @@
-from dagster import load_assets_from_package_module, repository, with_resources, fs_io_manager
+from dagster import repository, with_resources, fs_io_manager
+from dagster import AssetSelection, define_asset_job, ScheduleDefinition 
+from dagster import AssetKey, EventLogEntry, SensorEvaluationContext, asset_sensor, RunRequest
 from dagster_gcp.gcs import gcs_pickle_io_manager
 from dagster_gcp.gcs import gcs_resource
-from snowreport import assets
+from snowreport.assets import resort_summary, resort_assets
 from snowreport.resources import snocountry_api_client, bq_io_manager, bq_auth, bq_writer, bq_auth_fake
 from snowreport.jobs import resort_clean
 import os
+
+###################
+# Resources
+###################
 
 def get_current_env():
     is_branch_depl = os.getenv("DAGSTER_CLOUD_IS_BRANCH_DEPLOYMENT") == "1"
@@ -58,6 +64,7 @@ resource_defs = {
                 "gcs": gcs_resource.configured({"project": "fake"}),
                 "bq_auth": bq_auth_fake,
                 "bq_io_manager": fs_io_manager,
+                "bq_writer": bq_auth_fake
         },
     "branch": 
         {
@@ -86,18 +93,47 @@ resource_defs = {
     
 }
 
+###################
+# Assets & Jobs
+###################
 
-all_assets = load_assets_from_package_module(assets)
+all_assets = [*resort_assets, resort_summary]
+asset_job = define_asset_job("asset_job", AssetSelection.groups("default"))
+resort_clean_job = resort_clean.to_job(resource_defs=resource_defs[DEPLOYMENT])
+   
 
-if DEPLOYMENT != "local": 
-    all_jobs = [resort_clean.to_job(resource_defs=resource_defs[DEPLOYMENT])]
-else:
-    all_jobs = []    
+###################
+# Schedules & Sensors
+###################
+
+daily_schedule = ScheduleDefinition(job=asset_job, cron_schedule="0 7 * * *")
+
+@asset_sensor(asset_key=AssetKey("resort_summary"), job=resort_clean_job)
+def my_asset_sensor(context: SensorEvaluationContext, asset_event: EventLogEntry):
+    yield RunRequest(
+        run_key=context.cursor,
+        run_config={
+            "ops": {
+                "read_materialization": {
+                    "config": {
+                        "asset_key": asset_event.dagster_event.asset_key.path,
+                    }
+                }
+            }
+        },
+    )
+
+
+###################
+# Repository
+###################
 
 @repository
 def snowreport():
     definitions = [
         with_resources(all_assets,resource_defs[DEPLOYMENT]), 
-        all_jobs
+        [resort_clean_job, asset_job],
+        [daily_schedule],
+        [my_asset_sensor]
     ]
     return definitions
