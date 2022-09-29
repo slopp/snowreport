@@ -12,8 +12,5 @@ k8s_secrets:
 	kubectl create secret generic sa-private-key-id \
     	--from-literal=SA_PRIVATE_KEY_ID=$SA_PRIVATE_KEY_ID \
     	--namespace dagster; \
-	kubectl create secret generic gcs-creds \
-    	--from-literal=GOOGLE_APPLICATION_CREDENTIALS=$GCP_GCS_CREDS \
-    	--namespace dagster; \
 		
 	
