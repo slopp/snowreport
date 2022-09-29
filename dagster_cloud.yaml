@@ -6,10 +6,10 @@ locations:
       directory: ./
       registry:  us-central1-docker.pkg.dev/myhybrid-200215/dagit/snowreport
     container_context:
-    k8s:
-      env_secrets:
-        - sa-private-key
-        - sa-private-key-id
-      env_vars:
-        - DAGSTER_DEPLOYMENT=production
+      k8s:
+        env_secrets:
+          - sa-private-key
+          - sa-private-key-id
+        env_vars:
+          - DAGSTER_DEPLOYMENT=production
       
