@@ -57,9 +57,9 @@ def resort_summary(context, **resort_assets) -> pd.DataFrame:
     })
 
     for resort_name in resorts[1:]:
-        print(resort_name)
+        
         resort = resort_assets[resort_name] 
-        print(resort['resortName'])
+        
         add_to_summary = pd.DataFrame({
             "resort_name": resort['resortName'],
             "report_date": pd.to_datetime(date.today()),
@@ -71,7 +71,7 @@ def resort_summary(context, **resort_assets) -> pd.DataFrame:
             "high_tomorrow": pd.to_numeric(resort['weatherTomorrow_Temperature_High'])	
         })
         resort_summary = resort_summary.append(add_to_summary)
-    print(resort_summary)
+    
     return resort_summary
 
 
