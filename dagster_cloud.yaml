@@ -10,6 +10,7 @@ locations:
         env_secrets:
           - sa-private-key
           - sa-private-key-id
+          - gcs-creds
         env_vars:
           - DAGSTER_DEPLOYMENT=production
       
