@@ -2,6 +2,10 @@
 
 This is an attempt to build out a simple pipeline in dagster that reads data from an API and stores the result in GCS, and then compiles a "clean" version of the result in BQ.
 
+![dashboard image](./snowreportv3.png)
+
+Report result: https://datastudio.google.com/reporting/136a93b3-8070-410a-a884-f0f657307d12
+
 I've built this same pipeline in [R](https://github.com/slopp/scheduledsnow) and [GCP](https://github.com/slopp/embed-snow), but dagster adds:
 
 - the ability to re-run only certain assets (eg specific resorts)
@@ -32,7 +36,10 @@ def asset_factory(asset_keys: List[str]):
     return assets
 ```
 
-Next up, try to get this running in Dagster Cloud with GKE and branch deployments.
+- Figure out the issue with the report date not updating, creating redundant rows
+- Add a daily schedule for the assets, and a sensor for the clean up job
+- Add up the cost in GCP
+- Clean up the readme and write all about the project
 
 ## To get started
 
