@@ -111,16 +111,7 @@ daily_schedule = ScheduleDefinition(job=asset_job, cron_schedule="0 7 * * *")
 @asset_sensor(asset_key=AssetKey("resort_summary"), job=resort_clean_job)
 def my_asset_sensor(context: SensorEvaluationContext, asset_event: EventLogEntry):
     yield RunRequest(
-        run_key=context.cursor,
-        run_config={
-            "ops": {
-                "read_materialization": {
-                    "config": {
-                        "asset_key": asset_event.dagster_event.asset_key.path,
-                    }
-                }
-            }
-        },
+        run_key=context.cursor
     )
 
 
