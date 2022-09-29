@@ -7,10 +7,10 @@ k8s_secrets:
 	kubectl delete secret sa-private-key --namespace dagster; \
 	kubectl delete secret sa-private-key-id --namespace dagster; \
 	kubectl create secret generic sa-private-key \
-    	--from-literal=SA_PRIVATE_KEY=$SA_PRIVATE_KEY \
+    	--from-literal=SA_PRIVATE_KEY=$$SA_PRIVATE_KEY \
     	--namespace dagster; \
 	kubectl create secret generic sa-private-key-id \
-    	--from-literal=SA_PRIVATE_KEY_ID=$SA_PRIVATE_KEY_ID \
+    	--from-literal=SA_PRIVATE_KEY_ID=$$SA_PRIVATE_KEY_ID \
     	--namespace dagster; \
 
 
@@ -24,3 +24,5 @@ k8s_iam_for_gcs:
 		iam.gke.io/gcp-service-account=811245043115-compute@developer.gserviceaccount.com; \
 		
 	
+#kubectl exec --stdin --tty snowreport-prod-e58f34-7fc5fdc74b-wplxr --namespace dagster -- /bin/bash
+#kubectl get pod snowreport-prod-e58f34-7fc5fdc74b-wplxr -o yaml
