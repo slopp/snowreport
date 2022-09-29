@@ -12,5 +12,15 @@ k8s_secrets:
 	kubectl create secret generic sa-private-key-id \
     	--from-literal=SA_PRIVATE_KEY_ID=$SA_PRIVATE_KEY_ID \
     	--namespace dagster; \
+
+
+# see https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity
+k8s_iam_for_gcs:
+	gcloud iam service-accounts add-iam-policy-binding 811245043115-compute@developer.gserviceaccount.com \
+		--role roles/iam.workloadIdentityUser \
+		--member "serviceAccount:myhybrid-200215.svc.id.goog[dagster/user-cloud-dagster-cloud-agent]"; \
+	kubectl annotate serviceaccount user-cloud-dagster-cloud-agent \
+		--namespace dagster \
+		iam.gke.io/gcp-service-account=811245043115-compute@developer.gserviceaccount.com; \
 		
 	
