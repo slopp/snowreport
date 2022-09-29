@@ -63,7 +63,7 @@ resource_defs = {
         {
                 "snocountry_api": snocountry_api_client,
                 "gcs_io_manager": gcs_pickle_io_manager.configured({
-                    "gcs_bucket": "lopp_snow_report_raw/branch"
+                    "gcs_bucket": "lopp_snow_report_branch_raw"
                 }),
                 "gcs": gcs_resource.configured({
                     "project": "myhybrid-200215"

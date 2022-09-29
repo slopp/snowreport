@@ -11,12 +11,26 @@ More details to come.
 
 A few key notes:
 - My custom bq_io_manager expects the BQ dataset and table to already exist
-- You'll need to provide GCP SA JSON for the BQ read/write operations, see the repository resource config. Right now the secret key and id are made available through environment variables.
-- The GCS operations are done using the scopes / IAM privileges of the underlying compute, not the SA account
+- You'll need to provide GCP SA JSON for the BQ read/write operations, see the repository resource config. Right now the secret key and id are made available through environment variables, and in production those environment variables are supplied as k8s secrets, see the make target `k8s_secrets`.
+- The GCS operations are done using the scopes / IAM privileges of the underlying compute, not the SA account. In GKE autopilot clusters this is rather confusing, see the makefile target `k8s_iam_for_gcs` which ties the SA in K8s to the IAM SA allowing GCS writes to work.
 
 Areas of improvement:
-- include the date in the report asset key, or even consider using partitions
-- figure out a way to make the definition of assets more DRY
+- consider using partitions?
+- figure out a way to make the definition of assets more DRY... potentially through an asset factory
+
+```
+def asset_factory(asset_keys: List[str]):
+    assets = []
+    for key in asset_keys:
+
+        @asset(name=key)
+        def my_asset():
+            same_logic(key)
+
+        assets.append(my_asset)
+    
+    return assets
+```
 
 Next up, try to get this running in Dagster Cloud with GKE and branch deployments.
 

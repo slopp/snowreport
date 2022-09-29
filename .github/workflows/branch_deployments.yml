@@ -33,8 +33,10 @@ jobs:
       matrix:
         location: ${{ fromJSON(needs.parse_workspace.outputs.build_info) }}
     permissions:
-      contents: 'read'
+      contents: 'write'
       id-token: 'write'
+      pull-requests: 'write'
+      
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -51,9 +53,10 @@ jobs:
           
 
       - name: Build and deploy to Dagster Cloud hybrid
-        uses: dagster-io/dagster-cloud-action/actions/hybrid_branch_deploy@v0.1
+        uses: dagster-io/dagster-cloud-action/actions/hybrid_branch_deploy@v0.1.6
         with:
           dagster_cloud_api_token: ${{ secrets.DAGSTER_CLOUD_API_TOKEN }}
           location: ${{ toJson(matrix.location) }}
+          organization_id: "loppster"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
