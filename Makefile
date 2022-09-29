@@ -7,7 +7,7 @@ k8s_secrets:
 	kubectl delete secret sa-private-key --namespace dagster; \
 	kubectl delete secret sa-private-key-id --namespace dagster; \
 	kubectl create secret generic sa-private-key \
-    	--from-literal=SA_PRIVATE_KEY=$$SA_PRIVATE_KEY \
+    	--from-file=SA_PRIVATE_KEY=./private_key \
     	--namespace dagster; \
 	kubectl create secret generic sa-private-key-id \
     	--from-literal=SA_PRIVATE_KEY_ID=$$SA_PRIVATE_KEY_ID \
