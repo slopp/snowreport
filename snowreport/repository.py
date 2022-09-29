@@ -137,6 +137,7 @@ def snowreport():
     definitions = [
         with_resources(all_assets,resource_defs[DEPLOYMENT]), 
         all_jobs,
-        [daily_schedule]
+        [daily_schedule],
+        [my_asset_sensor]
     ]
     return definitions
