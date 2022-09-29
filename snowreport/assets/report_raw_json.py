@@ -42,7 +42,7 @@ def resort_summary(context, **resort_assets) -> pd.DataFrame:
 
     resort_summary = pd.DataFrame({
         "resort_name": resort['resortName'],
-        "report_date": date.today(),
+        "report_date": pd.to_datetime(date.today()),
         "condition": resort['weatherToday_Condition'],	
         "condition_tomorrow": resort['weatherTomorrow_Condition'],		
         "low_today": pd.to_numeric(resort['weatherToday_Temperature_Low']),		
@@ -55,7 +55,7 @@ def resort_summary(context, **resort_assets) -> pd.DataFrame:
         resort = resort_assets[resort_name]
         add_to_summary = pd.DataFrame({
             "resort_name": resort['resortName'],
-            "report_date": date.today(),
+            "report_date": pd.to_datetime(date.today()),
             "condition": resort['weatherToday_Condition'],	
             "condition_tomorrow": resort['weatherTomorrow_Condition'],		
             "low_today": pd.to_numeric(resort['weatherToday_Temperature_Low']),		
