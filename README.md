@@ -6,7 +6,7 @@ This is an attempt to build out a simple pipeline in dagster that reads data fro
 
 Report result: https://datastudio.google.com/reporting/136a93b3-8070-410a-a884-f0f657307d12
 
-I've built this same pipeline in [R](https://github.com/slopp/scheduledsnow) and [GCP](https://github.com/slopp/embed-snow), but this time is a little different, but kind of the same.
+I've built this same pipeline in [R](https://github.com/slopp/scheduledsnow) and [GCP](https://github.com/slopp/embed-snow). This time is a little different, but kind of the same.
 
 ![dagster image](./snowreportdagster.png)
 
@@ -16,16 +16,16 @@ The evolution of this project:
 
 - The R version relied on local storage, and production was scheduled on RStudio Connect and used a "production" volume mounted to the server. One scheduled function pulled all the data. A second scheduled function cleaned the data and generated a report. The two schedules were not connected, just run a half hour apart.   
 
-- The second version of the project used all the GCP services. A scheduled cloud function would pull the data for all resorts and write it to GCS. Then a constantly running ($$$) Dataflow job would read the GCS data and write it to BigQuery. Looker did most of the clean up and surfaced the resulting dashboard in a website using an iframe embed.  
+- The second version of the project used all the GCP services. A scheduled Cloud Function would pull the data for all resorts and write it to GCS. Then a constantly running ($$$) Dataflow job would read the GCS data and write it to BigQuery. Looker did most of the clean up and surfaced the resulting dashboard in a website using an iframe embed.  
 
 - This version uses dagster! A few of the key benefits are:  
     - There is now a separation between the production pipeline, my local testing, and a staging pipeline that runs on PRs to the code. This is the first version of the project tightly coupled with version control.  
 
     - The different environments use the same logic, but different resources. The local pipeline runs with just pandas dataframes that are stored on disk. The staging pipeline writes the resort data to GCS and then loads and cleans it in BigQuery, within a staging dataset (schema). The production pipeline is the same as the staginging pipeline, but uses the production dataset (schema).  
 
-    - The dagster version of the project correctly reflects the dependencies between the resorts and the final summary tables. Additionally, the data pulls from each resort are independent instead of being one function with a for-loop. This separation makes it easy to re-run one resort if the API call fails while still updating the resort summary with cached results for the other resorts.
+    - The dagster version of the project correctly reflects the dependency between the resort data and the final summary tables. Each resort data pull is an independent step instead of all the resort data being pulled in one function with a for-loop. This separation makes it easy to re-run one resort if the API call fails. The resort summary can be updated with the new resort data while using cached results for the other resorts.
 
-    - This version uses DataStudio for the report visualization. As you can tell, my interest in the reporting layer has decreased over time while my interest in the backend pipeline has increased. :shrug:. The report probably looks the best in DataStudio which is a testament to how cruddy I am at CSS regardless of the platform or level of interest.
+    - This version uses DataStudio for the report visualization. As you can tell, my interest in the reporting layer has decreased over time while my interest in the backend pipeline has increased. :shrug:. The report probably looks the best in DataStudio anyway which is a testament to how cruddy I am at CSS regardless of the platform or level of interest.
 
 All in all, this version of the project definitely required the most investment, but it also feels the most robust. In refactoring the code I caught mistakes in my staging environment that would have just trashed my other "production" versions of the project.
 
@@ -38,9 +38,11 @@ I could have used Airflow, but opted to use Dagster because:
 
 Dagster is aware that my goal is to create datasets. This awareness makes it possible for me to "re-materialize" specific assets (like data from one resort) and to see asset lineage. In comparison, other schedulers just execute tasks and lack the rich metadata and handy interface that is aware of the results.  
 
+![dagster assets](./dagsterassetviz.png)
+
 ### Code Structure
 
-Another benefit of Dagster knowing that data is my aim is dagster has strong opinions about how to separate the data processing logic from the data storage logic. This separation enables the different behavior in local/staging/production environments. Sure in other schedulers you can fuss about with if statements to change schemas, but if you want totally seperate resources for local testing than at some point your if statement becomes:
+Because Dagster knows that I'm building datasets, it has strong opinions about how to structure my code. The data processing logic is separate from the data storage logic. This separation made it easy for me to have local development build on pandas with staging and production built on GCS and BigQuery. The core logic was the same, see `assets`, and the storage was handled by `resources`. local/staging/production environments. In other schedulers you can fuss about with if statements to change schemas, but if you want totally seperate resources for local testing than at some point your if statement becomes:
 
 ```
 if local:
@@ -49,15 +51,15 @@ else:
     productionOp
 ```
 
-In dagster, the logical code is the same even if my local environment is using pandas and pickle files and production is using BigQuery. 
+In other schedulers I would have done the initial development with cloud resources, which would have dramatically slowed things down. I get really distracted if I have to wait for Kubernetes schedulers to test a code change!
 
-I also really liked that in dagster I could run everything locally with just Python before swallowing Docker and Kubernetes setup.
+In dagster I developed everything locally with just Python. Once my code was ready I did have to setup my production deployment, which took some slow Kubernetes iterations. However that configuration is just that - a one-time setup cost for the project. Now that production and staging are configured, I can make changes to my core code locally without ever waiting on the Kubernetes setup.
 
-### Performance
+### Internal Tool Architecture
 
-Airflow workers load all the code all the time. This can create performance issues, but it also causes a dependency nightmare where all python code has to be compatible airflow package versions. The natural workaround is to create separate Airflow clusters for everything, which sort of defeats the point of a scheduler knowing about dependencies between things!
+Airflow workers load all the code all the time. This architecture can create performance issues, but it also causes a dependency nightmare where the data transformation python code has to be compatible with airflow's internal dependencies. The natural workaround to these two problems is to create separate Airflow clusters for everything, which sort of defeats the point of a scheduler knowing about dependencies between things!
 
-Dagster works differently and ensures that dagster's scheduler is separate from my user code which means we can have different dependencies and avoid performance concerns.
+Dagster's built differently and ensures that dagster's control plane is separate from my user code. For a toy project like this one the concerns here are mostly hypothetical, but for actual workloads they are a big deal.
 
 ## About the Environment
 
@@ -78,7 +80,7 @@ A few things that I did here are worth calling out for future me:
 
 - My repo is setup to build my dagster code into a Docker image for each commit to a PR. This is great for testing changes, but if I just want to update this ReadMe I can have GH skip those actions by including `[skip ci]` in the commit message.
 
-- My development environment for this work was VS Code + a GCP VM. A few helpful commands:
+- My development environment for this work was VS Code + a GCP VM. Most of the helpful commands live in the `Makefile`, but:
 
 ```
 # to get VS Code to talk to the VM
@@ -87,7 +89,7 @@ gcloud compute config-ssh
 
 ## Future Work
 
-- [ ] Figure out how to use dagster partitions.
+- [ ] Figure out how to use Dagster partitions.
 - [ ] Once the ski season begins, update the code to show snowfall totals, predictions, and trail status. 
 - [ ] Add a resort facts table.
 - [ ] Cost
