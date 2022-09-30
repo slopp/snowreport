@@ -40,26 +40,19 @@ Dagster is aware that my goal is to create datasets. This awareness makes it pos
 
 ![dagster assets](./dagsterassetviz.png)
 
-### Code Structure
+### Code Structure and Local Development
 
-Because Dagster knows that I'm building datasets, it has strong opinions about how to structure my code. The data processing logic is separate from the data storage logic. This separation made it easy for me to have local development build on pandas with staging and production built on GCS and BigQuery. The core logic was the same, see `assets`, and the storage was handled by `resources`. local/staging/production environments. In other schedulers you can fuss about with if statements to change schemas, but if you want totally seperate resources for local testing than at some point your if statement becomes:
+Because Dagster knows that I'm building datasets, it has strong opinions about how to structure my code. The data processing logic is separate from the data storage logic. This separation made it easy for me to have local development build on pandas with staging and production built on GCS and BigQuery. The core logic was the same, see `assets`, and the different storage for local/staging/prod was handled by `resources`. While you can fuss around with `if` statements to achieve similar outcomes in other tools, the first class support in Dagster makes a world of difference.
 
-```
-if local:
-    localOp
-else:
-    productionOp
-```
+Speaking of local development, in dagster I developed everything locally with Python. I didn't have to mess with Docker or minikube. In other schedulers I would have done the initial development with cloud resources, which dramatically slows things down (see v2 of this project). I get really distracted if I have to wait for Kubernetes schedulers to test a code change!
 
-In other schedulers I would have done the initial development with cloud resources, which would have dramatically slowed things down. I get really distracted if I have to wait for Kubernetes schedulers to test a code change!
+ Once my dagster code was ready I did have to setup my production deployment, which took some Kubernetes iterations. However, those iterations were config iterations not code changes - a one-time setup cost for the project. Now that production and staging are configured, I can make changes to my core code locally without ever waiting on the Kubernetes setup.
 
-In dagster I developed everything locally with just Python. Once my code was ready I did have to setup my production deployment, which took some slow Kubernetes iterations. However that configuration is just that - a one-time setup cost for the project. Now that production and staging are configured, I can make changes to my core code locally without ever waiting on the Kubernetes setup.
+### Internal Architecture
 
-### Internal Tool Architecture
+Airflow workers load all the code all the time. This architecture can create performance issues, but it also causes a dependency nightmare where the data transformation python code has to be compatible with airflow's internal dependencies. The natural workaround to these two problems is to create distinct Airflow clusters for everything, which sort of defeats the point of a scheduler knowing about the dependencies between things!
 
-Airflow workers load all the code all the time. This architecture can create performance issues, but it also causes a dependency nightmare where the data transformation python code has to be compatible with airflow's internal dependencies. The natural workaround to these two problems is to create separate Airflow clusters for everything, which sort of defeats the point of a scheduler knowing about dependencies between things!
-
-Dagster's built differently and ensures that dagster's control plane is separate from my user code. For a toy project like this one the concerns here are mostly hypothetical, but for actual workloads they are a big deal.
+Dagster's built differently and ensures that the Dagster control plane is separate from my user code. For a toy project like this one the impact is mostly hypothetical, but for actual workloads these architecture hurdles a big deal.
 
 ## About the Environment
 
