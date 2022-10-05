@@ -1,6 +1,8 @@
 # snowreport
 
-This is an attempt to build out a simple pipeline in dagster that reads data from an API and stores the result in GCS, and then compiles a "clean" version of the result in BQ.
+I live in the front range of Colorado, which means each ski weekend I have to make the difficult choice about which world class resort to visit. To aide in this choice, over the years, I've built data pipelines and dashboards to show an aggregated view of resort conditions like weather, terrain status, and snow conditions. These data products make it easy to compare resorts with a single web visit instead of visiting the website for each resort.
+
+This repository contains a dagster implementation. For each ski resort, an API request is made that returns weather, terrain status, snow conditions, and other resort details. The results of the requests are then stored in BigQuery, prepared for visualization, and presented in a dashboard.
 
 ![dashboard image](./snowreportv3.png)
 
@@ -12,7 +14,7 @@ I've built this same pipeline in [R](https://github.com/slopp/scheduledsnow) and
 
 ## Project Evolution 
 
-The evolution of this project:
+One reason I keep re-building these data products is that I learn new tools best when I have a clear goal of what I want to build. Re-implementing the same patterns in new stacks also allows me to compare and contrast technologies:
 
 - The R version relied on local storage, and production was scheduled on RStudio Connect and used a "production" volume mounted to the server. One scheduled function pulled all the data. A second scheduled function cleaned the data and generated a report. The two schedules were not connected, just run a half hour apart.   
 
@@ -60,18 +62,18 @@ This project is using Dagster Cloud's Hybrid deployment model. Basically:
 
 1. I wrote my code and ran it locally using just a Python virtual environment. I was also able to test my staging and production resources (GCS and BigQuery) using my local environment by supplying the right GCP IAM permissions to the environment.  
 
-2. Next I setup Dagster Cloud which serves as my control plane. I also setup a GKE autopilot cluster which would serve as my execution plane.  
+2. Next I setup Dagster Cloud which serves as my control plane. I also setup a GKE autopilot cluster which serves as my execution plane.  
 
-3. Once my code was ready to be deployed, I made a few modifications to prepare it for primetime. I added a Dockerfile and dagster deployment configs. I also setup a Google Artifact Registry to house the Docker images containing my code. The code itself runs in GKE while Dagster Cloud keeps track of everything.  
+3. I made a few modifications to prepare it for deployment. I added a Dockerfile and dagster deployment configs. I also setup a Google Artifact Registry to house the Docker images containing my code. The code runs in GKE while Dagster Cloud keeps track of everything.  
 
 
 A few things that I did here are worth calling out for future me:
 
-- I wrote a custom `bq_io_manager` to handle writing my results to BQ, and my implementation the BQ dataset and table to already exist and be supplied as resource configuration.  
+- I wrote a custom `bq_io_manager` to handle writing my results to BQ, and my implementation expects the BQ dataset and table to already exist and be supplied as resource configuration.  
 
-- I decided to make life a little hard for myself to test out a few different ways to handle authenticating to external services. For the GCS writing, I rely on the underlying environment to havthee access. In production, this is done by having the Kubernetes service account access a GCP IAM service account in a convulted process called workload identity. See the makefile `k8s_iam_for_gcs` for details. For BQ, I went with the explicit approach of having the credentials supplied to the client code. Locally those credentials are passed through environment variables. In production those environment variables are set through K8s secrets, see the make target `k8s_secrets`. The v1 R version of this project had a lot less permissioning headaches.
+- I decided to make life a little harder for myself to test out a few different ways to handle authenticating to external services. For GCS, I rely on the underlying environment to have access. In production, this underlying access is granted through the Kubernetes service account which, in turns, binds to a GCP IAM service account in a convulted process called workload identity. See the makefile `k8s_iam_for_gcs` for details. For BQ, I went with the explicit approach of supplying the GCP IAM service account credentials directly to the client code. Locally those credentials are passed through environment variables. In production those environment variables are set through K8s secrets, see the make target `k8s_secrets`. 
 
-- My repo is setup to build my dagster code into a Docker image for each commit to a PR. This is great for testing changes, but if I just want to update this ReadMe I can have GH skip those actions by including `[skip ci]` in the commit message.
+- My repo is setup to build my Dagster code into a Docker image for each commit to a PR. This is great for testing changes, but if I just want to update this ReadMe I can have GitHub skip those actions by including `[skip ci]` in the commit message.
 
 - My development environment for this work was VS Code + a GCP VM. Most of the helpful commands live in the `Makefile`, but:
 
