@@ -1,4 +1,4 @@
-from dagster import Output, asset, AssetIn
+from dagster import Output, asset, AssetIn, DailyPartitionsDefinition
 import pandas as pd
 from datetime import date
 from typing import List
@@ -21,6 +21,7 @@ def asset_factory(asset_keys: List[str], resorts: dict):
             required_resource_keys={"snocountry_api"},
             name=key,
             io_manager_key="gcs_io_manager",
+            partitions_def=DailyPartitionsDefinition(start_date="2022-10-05")
         )
         def my_asset(context) -> pd.DataFrame:
             api = context.resources.snocountry_api
@@ -38,7 +39,8 @@ resort_assets = asset_factory(asset_keys, resorts)
 @asset(
     io_manager_key="bq_io_manager",
     required_resource_keys={"bq_auth"},
-    ins = {key: AssetIn(key) for key in asset_keys}
+    ins = {key: AssetIn(key) for key in asset_keys},
+    partitions_def=DailyPartitionsDefinition(start_date="2022-10-05"),
 )
 def resort_summary(context, **resort_assets) -> pd.DataFrame:
     """Insert clean resort records to BQ"""
