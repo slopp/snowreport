@@ -60,7 +60,7 @@ resource_defs = {
         # fake it till you make it
         {
                 "snocountry_api": snocountry_api_client,
-                "gcs_io_manager": fs_io_manager,
+                "gcs_io_manager": fs_io_manager.configured({"base_dir": os.environ["DAGSTER_HOME"]+"/storage"}),
                 "gcs": gcs_resource.configured({"project": "fake"}),
                 "bq_auth": bq_auth_fake,
                 "bq_io_manager": fs_io_manager,
