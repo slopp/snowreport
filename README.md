@@ -84,9 +84,10 @@ gcloud compute config-ssh
 
 ## Future Work
 
-- [ ] Figure out how to use Dagster partitions.
+- ~[ ] Figure out how to use Dagster partitions.~
 - [ ] Once the ski season begins, update the code to show snowfall totals, predictions, and trail status. 
 - [ ] Add a resort facts table.
+- [ ] Add in dbt for the SQL based transformations.
 - [ ] Cost
 
 ## Getting Started
