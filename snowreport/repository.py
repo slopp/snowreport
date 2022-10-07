@@ -134,7 +134,7 @@ resort_clean_job = resort_clean.to_job(resource_defs=resource_defs[DEPLOYMENT])
 
 daily_schedule = build_schedule_from_partitioned_job(asset_job)
 
-@asset_sensor(asset_key=AssetKey("resort_summary"), job=resort_clean_job)
+@asset_sensor(asset_key=AssetKey(["snocountry", "resort_raw"]), job=resort_clean_job)
 def my_asset_sensor(context: SensorEvaluationContext, asset_event: EventLogEntry):
     yield RunRequest(
         run_key=context.cursor
