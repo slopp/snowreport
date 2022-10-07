@@ -4,7 +4,6 @@ from dagster import _check as check
 from google.cloud import bigquery
 from google.oauth2 import service_account
 import pandas_gbq
-import os
 
 class BQIOManager(IOManager):
     """Inserts data into existing BQ table."""
@@ -30,7 +29,8 @@ class BQIOManager(IOManager):
             autodetect=False,
             source_format=bigquery.SourceFormat.NEWLINE_DELIMITED_JSON
         )
-
+        # defaults to appending records, so this takes the current asset pandas df 
+        # and adds it to the existing table
         job = client.load_table_from_dataframe(
             obj, table_id, job_config
         )  

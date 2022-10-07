@@ -1,0 +1,43 @@
+snowdb:
+  outputs:
+    prod:
+        dataset: snowreport
+        job_execution_timeout_seconds: 300
+        job_retries: 1
+        location: us-central1
+        method: service-account-json
+        priority: interactive
+        project: myhybrid-200215
+        threads: 1
+        type: bigquery
+        keyfile_json:
+          project_id: myhybrid-200215
+          private_key_id: "{{ env_var('SA_PRIVATE_KEY_ID') }}"
+          private_key: "{{ env_var('SA_PRIVATE_KEY') }}"
+          client_email: "811245043115-compute@developer.gserviceaccount.com"
+          client_id: "105707464203810563700"
+          auth_uri: "https://accounts.google.com/o/oauth2/auth"
+          token_uri: "https://accounts.google.com/o/oauth2/token"
+          auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs"
+          client_x509_cert_url: "https://www.googleapis.com/robot/v1/metadata/x509/811245043115-compute%40developer.gserviceaccount.com"
+    branch:
+      dataset: snowreport_branch
+      job_execution_timeout_seconds: 300
+      job_retries: 1
+      location: us-central1
+      method: service-account-json
+      priority: interactive
+      project: myhybrid-200215
+      threads: 1
+      type: bigquery
+      keyfile_json:
+        project_id: myhybrid-200215
+        private_key_id: "{{ env_var('SA_PRIVATE_KEY_ID') }}"
+        private_key: "{{ env_var('SA_PRIVATE_KEY') }}"
+        client_email: "811245043115-compute@developer.gserviceaccount.com"
+        client_id: "105707464203810563700"
+        auth_uri: "https://accounts.google.com/o/oauth2/auth"
+        token_uri: "https://accounts.google.com/o/oauth2/token"
+        auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs"
+        client_x509_cert_url: "https://www.googleapis.com/robot/v1/metadata/x509/811245043115-compute%40developer.gserviceaccount.com"
+  target: branch

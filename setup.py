@@ -9,11 +9,13 @@ if __name__ == "__main__":
             "dagit",
             "dagster-cloud",
             "dagster-k8s",
+            "dagster-dbt",
             "pandas",
             "dagster-gcp",
             "google.cloud",
             "google-auth",
-            "pandas_gbq"
+            "pandas_gbq",
+            "dbt-bigquery"
         ],
         extras_require={"dev": ["dagit", "pytest"]},
     )
