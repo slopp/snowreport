@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: snocountry
+    schema: |
+      {%- if  target.name == "prod" -%} snowreport
+      {%- else -%} snowreport_branch
+      {%- endif -%}
+    tables:
+      - name: resort_raw

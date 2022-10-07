@@ -69,11 +69,27 @@ This project is using Dagster Cloud's Hybrid deployment model. Basically:
 
 A few things that I did here are worth calling out for future me:
 
-- I wrote a custom `bq_io_manager` to handle writing my results to BQ, and my implementation expects the BQ dataset and table to already exist and be supplied as resource configuration.  
+![BQ Console for Project](./snowreportbq.png)
+
+- I wrote a custom `bq_io_manager` to handle writing my results to BQ, and my implementation expects the BQ dataset and table to already exist and be supplied as resource configuration. I wrote my own IO manager because I wanted to be _appending_ data to my raw table everyday and the default asset IO behavior is to overwrite data. However, now that I have partitions in place, it might be possible to use a regular IO manager that loads all partitions from GCS into the BQ table through a backfill(?) I'm not sure. I will need to experiment a bit more in staging tables.
+
+- I wrote an *op* and *job* that use a *resource* - `bq_writer` - to drop and create a table called `resort_clean`. This job is triggered by a *sensor* whenever the `resort_raw` asset is updated. I primarily did this to test out the job and sensor concepts.
+
+- I added a few dbt assets to test out the dagster and dbt integrations. The dbt integration has a few complexities:
+    - To tell dbt that it depeneds on dagster you use a dbt source `snowdb/models/sources.yml`. The asset key in dagster must match the dbt source `name + table`, which in turn means the asset key must be `key prefix + asset name`...
+
+    dagster | dbt
+    --- | ---
+    key prefix | source name
+    asset name/key | table
+
+    - I wanted dbt to switch schemas (BQ datasets) for local/branch/prod deployments. I did this with if templating in `snowdb/models/sources.yml`, but it feels like I've repeated myself A LOT between the dbt profile and the dagster resource configs. 
 
 - I decided to make life a little harder for myself to test out a few different ways to handle authenticating to external services. For GCS, I rely on the underlying environment to have access. In production, this underlying access is granted through the Kubernetes service account which, in turns, binds to a GCP IAM service account in a convulted process called workload identity. See the makefile `k8s_iam_for_gcs` for details. For BQ, I went with the explicit approach of supplying the GCP IAM service account credentials directly to the client code. Locally those credentials are passed through environment variables. In production those environment variables are set through K8s secrets, see the make target `k8s_secrets`. 
 
 - My repo is setup to build my Dagster code into a Docker image for each commit to a PR. This is great for testing changes, but if I just want to update this ReadMe I can have GitHub skip those actions by including `[skip ci]` in the commit message.
+
+- There is a Python notebook that includes code to load assets. Changing the environment code chunk changes whether they load from local or production resources. This notebook is a great way to view the contents of the pickled files.
 
 - My development environment for this work was VS Code + a GCP VM. Most of the helpful commands live in the `Makefile`, but:
 
@@ -84,7 +100,16 @@ gcloud compute config-ssh
 
 ## Future Work
 
-- ~[ ] Figure out how to use Dagster partitions.~
+- [ ] ~Add tests~
+- [ ] ~Branch deployments~
+- [ ] Figure out how to use Dagster partitions
+    - [ ] ~add daily partitions to raw table and individual resorts~
+    - [ ] update dagster version so `load_asset` in the ipynb works with partitions
+    - [ ] figure out if I can use backfills to _append_ data to my BQ raw table without such a hacky IO manager, perhaps using the partition key as the `report_date` field
+- [ ] dbt
+    - [ ] ~initial dbt setup~
+    - [ ] local dbt should use duckdb instead of BQ
+    - [ ] asset that is downstream of dbt
 - [ ] Once the ski season begins, update the code to show snowfall totals, predictions, and trail status. 
 - [ ] Add a resort facts table.
 - [ ] Add in dbt for the SQL based transformations.

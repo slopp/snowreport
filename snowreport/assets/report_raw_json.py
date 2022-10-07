@@ -41,8 +41,9 @@ resort_assets = asset_factory(asset_keys, resorts)
     required_resource_keys={"bq_auth"},
     ins = {key: AssetIn(key) for key in asset_keys},
     partitions_def=DailyPartitionsDefinition(start_date="2022-10-05"),
+    key_prefix="snocountry"
 )
-def resort_summary(context, **resort_assets) -> pd.DataFrame:
+def resort_raw(context, **resort_assets) -> pd.DataFrame:
     """Insert clean resort records to BQ"""
     resorts = list(resort_assets.keys())
     resort = resort_assets[resorts[0]]

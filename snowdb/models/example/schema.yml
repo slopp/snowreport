@@ -1,0 +1,12 @@
+
+version: 2
+
+models:
+  - name: resort_tomorrow
+    description: "Weather for tomorrow"
+    columns:
+      - name: resort_name
+        description: "The primary key for this table"
+        tests:
+          - unique
+          - not_null
