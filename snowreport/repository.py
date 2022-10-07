@@ -1,12 +1,17 @@
 from dagster import repository, with_resources, fs_io_manager
 from dagster import AssetSelection, define_asset_job, ScheduleDefinition 
 from dagster import AssetKey, EventLogEntry, SensorEvaluationContext, asset_sensor, RunRequest
+from dagster_dbt import dbt_cli_resource, load_assets_from_dbt_project
 from dagster_gcp.gcs import gcs_pickle_io_manager
 from dagster_gcp.gcs import gcs_resource
-from snowreport.assets import resort_summary, resort_assets
+from snowreport.assets import resort_raw, resort_assets
 from snowreport.resources import snocountry_api_client, bq_io_manager, bq_auth, bq_writer, bq_auth_fake
 from snowreport.jobs import resort_clean
 import os
+from dagster._utils import file_relative_path
+
+DBT_PROJECT_DIR = file_relative_path(__file__, "../snowdb")
+DBT_PROFILES_DIR = file_relative_path(__file__, "../snowdb/config")
 
 ###################
 # Resources
@@ -30,7 +35,12 @@ sa_json = {
     "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/811245043115-compute%40developer.gserviceaccount.com"
 }
 
-# todo...make this DRY
+# TODO...make this DRY
+# bq_io_manager - requires a table to already exists and appends records to it
+# bq_auth - used by bq_writer eand bq_io_manager
+# bq_writer - is for the resort clean job, runs a CREATE TABLE statement directly 
+# gcs_io_manager + gcs - used to write raw API results to GCS as pickled objects
+# snocountry_api - uses a developer test key to access snocountry API
 resource_defs = {
     "production": 
         {
@@ -55,16 +65,21 @@ resource_defs = {
                     "table_id": "myhybrid-200215.snowreport.resort_raw",
                     "project_id": "myhybrid-200215"
                 }),
+                "dbt": dbt_cli_resource.configured({ "project_dir": DBT_PROJECT_DIR, "profiles_dir": DBT_PROFILES_DIR,  "target": "prod" })
         },
     "local": 
         # fake it till you make it
         {
                 "snocountry_api": snocountry_api_client,
-                "gcs_io_manager": fs_io_manager.configured({"base_dir": os.environ["DAGSTER_HOME"]+"/storage"}),
+                #"gcs_io_manager": fs_io_manager.configured({"base_dir": os.environ["DAGSTER_HOME"]+"/storage"}),
+                "gcs_io_manager": fs_io_manager,
                 "gcs": gcs_resource.configured({"project": "fake"}),
                 "bq_auth": bq_auth_fake,
                 "bq_io_manager": fs_io_manager,
-                "bq_writer": bq_auth_fake
+                # TODO remove this if clean job and sensor can be eliminated from local repo
+                "bq_writer": bq_auth_fake,
+                # TODO figure out how to have dbt use a local duckdb not BQ, will require a diff mock bq_io_manager beyond fs_io_manager
+                "dbt": dbt_cli_resource.configured({ "project_dir": DBT_PROJECT_DIR, "profiles_dir": DBT_PROFILES_DIR,  "target": "branch" })
         },
     "branch": 
         {
@@ -89,6 +104,7 @@ resource_defs = {
                     "table_id": "myhybrid-200215.snowreport_branch.resort_raw",
                     "project_id": "myhybrid-200215"
                 }),
+                "dbt": dbt_cli_resource.configured({ "project_dir": DBT_PROJECT_DIR, "profiles_dir": DBT_PROFILES_DIR, "target": "branch"})
         },
     
 }
@@ -97,10 +113,15 @@ resource_defs = {
 # Assets & Jobs
 ###################
 
-all_assets = [*resort_assets, resort_summary]
+dbt_assets = load_assets_from_dbt_project(
+    DBT_PROJECT_DIR,
+    io_manager_key="bq_io_manager"
+)
+
+all_assets = [*resort_assets, resort_raw, *dbt_assets]
 asset_job = define_asset_job("asset_job", AssetSelection.groups("default"))
 resort_clean_job = resort_clean.to_job(resource_defs=resource_defs[DEPLOYMENT])
-   
+
 
 ###################
 # Schedules & Sensors
