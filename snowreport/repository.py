@@ -1,4 +1,5 @@
-from dagster import repository, with_resources, fs_io_manager
+from tracemalloc import start
+from dagster import DailyPartitionsDefinition, build_schedule_from_partitioned_job, repository, with_resources, fs_io_manager
 from dagster import AssetSelection, define_asset_job, ScheduleDefinition 
 from dagster import AssetKey, EventLogEntry, SensorEvaluationContext, asset_sensor, RunRequest
 from dagster_gcp.gcs import gcs_pickle_io_manager
@@ -60,7 +61,7 @@ resource_defs = {
         # fake it till you make it
         {
                 "snocountry_api": snocountry_api_client,
-                "gcs_io_manager": fs_io_manager.configured({"base_dir": os.environ["DAGSTER_HOME"]+"/storage"}),
+                "gcs_io_manager": fs_io_manager,
                 "gcs": gcs_resource.configured({"project": "fake"}),
                 "bq_auth": bq_auth_fake,
                 "bq_io_manager": fs_io_manager,
@@ -98,7 +99,11 @@ resource_defs = {
 ###################
 
 all_assets = [*resort_assets, resort_summary]
-asset_job = define_asset_job("asset_job", AssetSelection.groups("default"))
+asset_job = define_asset_job(
+    "asset_job",
+     AssetSelection.groups("default"),
+     partitions_def=DailyPartitionsDefinition(start_date="2022-10-05")
+)
 resort_clean_job = resort_clean.to_job(resource_defs=resource_defs[DEPLOYMENT])
    
 
@@ -106,7 +111,7 @@ resort_clean_job = resort_clean.to_job(resource_defs=resource_defs[DEPLOYMENT])
 # Schedules & Sensors
 ###################
 
-daily_schedule = ScheduleDefinition(job=asset_job, cron_schedule="0 7 * * *")
+daily_schedule = build_schedule_from_partitioned_job(asset_job)
 
 @asset_sensor(asset_key=AssetKey("resort_summary"), job=resort_clean_job)
 def my_asset_sensor(context: SensorEvaluationContext, asset_event: EventLogEntry):
