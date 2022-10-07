@@ -13,8 +13,12 @@ class BQIOManager(IOManager):
         self.sa_private_key = sa_private_key.replace(r'\n', '\n') 
 
     def handle_output(self, context, obj):
+        if isinstance(obj, type(None)):
+            return
+
         if not isinstance(obj, pd.DataFrame):
             check.failed(f"Outputs of type {type(obj)} not supported.")
+        
 
         project_id = context.resource_config["project_id"]
         sa_json = {"private_key": self.sa_private_key, "private_key_id": self.sa_private_key_id}
