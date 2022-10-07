@@ -89,6 +89,8 @@ A few things that I did here are worth calling out for future me:
 
 - My repo is setup to build my Dagster code into a Docker image for each commit to a PR. This is great for testing changes, but if I just want to update this ReadMe I can have GitHub skip those actions by including `[skip ci]` in the commit message.
 
+- There is a Python notebook that includes code to load assets. Changing the environment code chunk changes whether they load from local or production resources. This notebook is a great way to view the contents of the pickled files.
+
 - My development environment for this work was VS Code + a GCP VM. Most of the helpful commands live in the `Makefile`, but:
 
 ```
@@ -102,6 +104,7 @@ gcloud compute config-ssh
 - ~[ ] Branch deployments~
 - [ ] Figure out how to use Dagster partitions
     - [ ] ~add daily partitions to raw table and individual resorts~
+    - [ ] update dagster version so `load_asset` in the ipynb works with partitions
     - [ ] figure out if I can use backfills to _append_ data to my BQ raw table without such a hacky IO manager, perhaps using the partition key as the `report_date` field
 - [ ] dbt
     - ~[ ] initial dbt setup~

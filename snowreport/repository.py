@@ -65,7 +65,7 @@ resource_defs = {
                     "table_id": "myhybrid-200215.snowreport.resort_raw",
                     "project_id": "myhybrid-200215"
                 }),
-                "dbt": dbt_cli_resource.configured({ "project_dir": DBT_PROJECT_DIR, "target": "prod" })
+                "dbt": dbt_cli_resource.configured({ "project_dir": DBT_PROJECT_DIR, "profiles_dir": DBT_PROFILES_DIR,  "target": "prod" })
         },
     "local": 
         # fake it till you make it
@@ -104,7 +104,7 @@ resource_defs = {
                     "table_id": "myhybrid-200215.snowreport_branch.resort_raw",
                     "project_id": "myhybrid-200215"
                 }),
-                "dbt": dbt_cli_resource.configured({ "project_dir": DBT_PROJECT_DIR, "target": "branch"})
+                "dbt": dbt_cli_resource.configured({ "project_dir": DBT_PROJECT_DIR, "profiles_dir": DBT_PROFILES_DIR, "target": "branch"})
         },
     
 }
