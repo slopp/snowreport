@@ -1,4 +1,5 @@
-from dagster import repository, with_resources, fs_io_manager
+from tracemalloc import start
+from dagster import DailyPartitionsDefinition, build_schedule_from_partitioned_job, repository, with_resources, fs_io_manager
 from dagster import AssetSelection, define_asset_job, ScheduleDefinition 
 from dagster import AssetKey, EventLogEntry, SensorEvaluationContext, asset_sensor, RunRequest
 from dagster_dbt import dbt_cli_resource, load_assets_from_dbt_project
@@ -119,7 +120,11 @@ dbt_assets = load_assets_from_dbt_project(
 )
 
 all_assets = [*resort_assets, resort_raw, *dbt_assets]
-asset_job = define_asset_job("asset_job", AssetSelection.groups("default"))
+asset_job = define_asset_job(
+    "asset_job",
+     AssetSelection.groups("default"),
+     partitions_def=DailyPartitionsDefinition(start_date="2022-10-05")
+)
 resort_clean_job = resort_clean.to_job(resource_defs=resource_defs[DEPLOYMENT])
 
 
@@ -127,7 +132,7 @@ resort_clean_job = resort_clean.to_job(resource_defs=resource_defs[DEPLOYMENT])
 # Schedules & Sensors
 ###################
 
-daily_schedule = ScheduleDefinition(job=asset_job, cron_schedule="0 7 * * *")
+daily_schedule = build_schedule_from_partitioned_job(asset_job)
 
 @asset_sensor(asset_key=AssetKey("resort_summary"), job=resort_clean_job)
 def my_asset_sensor(context: SensorEvaluationContext, asset_event: EventLogEntry):
