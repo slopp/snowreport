@@ -131,6 +131,7 @@ TRUNCATE TABLE `myhybrid-200215.snowreport.resort_raw`
 - [ ] ~Branch deployments~
 - [ ] Figure out how to use Dagster partitions
     - [ ] ~add daily partitions to raw table and individual resorts~
+    - [ ] fix tests 
     - [ ] update dagster version so `load_asset` in the ipynb works with partitions
     - [ ] ~figure out if I can use backfills to _append_ data to my BQ raw table without such a hacky IO manager, perhaps using the partition key as the `report_date` field~
 - [ ] dbt
