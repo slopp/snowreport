@@ -25,7 +25,9 @@ One reason I keep re-building these data products is that I learn new tools best
 
     - The different environments use the same logic, but different resources. The local pipeline runs with just pandas dataframes that are stored on disk. The staging pipeline writes the resort data to GCS and then loads and cleans it in BigQuery, within a staging dataset (schema). The production pipeline is the same as the staginging pipeline, but uses the production dataset (schema).  
 
-    - The dagster version of the project correctly reflects the dependency between the resort data and the final summary tables. Each resort data pull is an independent step instead of all the resort data being pulled in one function with a for-loop. This separation makes it easy to re-run one resort if the API call fails. The resort summary can be updated with the new resort data while using cached results for the other resorts.
+    - The dagster version of the project correctly reflects the dependency between the resort data and the final summary tables. Each resort data pull is an independent step instead of all the resort data being pulled in one function with a for-loop. This separation makes it easy to re-run one resort if the API call fails. The resort summary can be updated with the new resort data while using cached results for the other resorts. 
+
+    - The dagster version support backfills. The raw resort data is stored in GCS each day. If I want to change the loading logic for my table that loads the resort data, dagster makes it easy to go back through the historical stored data and load it using the new logic.
 
     - This version uses DataStudio for the report visualization. As you can tell, my interest in the reporting layer has decreased over time while my interest in the backend pipeline has increased. :shrug:. The report probably looks the best in DataStudio anyway which is a testament to how cruddy I am at CSS regardless of the platform or level of interest.
 
@@ -42,6 +44,11 @@ Dagster is aware that my goal is to create datasets. This awareness makes it pos
 
 ![dagster assets](./dagsterassetviz.png)
 
+Partitions and backfills are also possible because dagster is aware I am building datasets. If I update my asset logic, I can re-run the tasks to build the new asset with historical "upstream" data in a backfill, instead of manually managing tons of backfill logic in my code.
+
+![dagster backfills](./backfills.png)
+
+
 ### Code Structure and Local Development
 
 Because Dagster knows that I'm building datasets, it has strong opinions about how to structure my code. The data processing logic is separate from the data storage logic. This separation made it easy for me to have local development build on pandas with staging and production built on GCS and BigQuery. The core logic was the same, see `assets`, and the different storage for local/staging/prod was handled by `resources`. While you can fuss around with `if` statements to achieve similar outcomes in other tools, the first class support in Dagster makes a world of difference.
@@ -49,6 +56,8 @@ Because Dagster knows that I'm building datasets, it has strong opinions about h
 Speaking of local development, in dagster I developed everything locally with Python. I didn't have to mess with Docker or minikube. In other schedulers I would have done the initial development with cloud resources, which dramatically slows things down (see v2 of this project). I get really distracted if I have to wait for Kubernetes schedulers to test a code change!
 
  Once my dagster code was ready I did have to setup my production deployment, which took some Kubernetes iterations. However, those iterations were config iterations not code changes - a one-time setup cost for the project. Now that production and staging are configured, I can make changes to my core code locally without ever waiting on the Kubernetes setup.
+
+ The code structure also makes it possible to do unit tests that use mock resources.
 
 ### Internal Architecture
 
@@ -98,6 +107,24 @@ A few things that I did here are worth calling out for future me:
 gcloud compute config-ssh
 ```
 
+## To Update the Resort Raw Table
+
+Everyday the raw asset loaders pull in new data for each resort and store that data in GCS. The raw data is a JSON blob with tons of fields. The logic that loads the data into a raw table in BQ applies a schema. Both assets use Dagster partitions, which means the historical raw data is available and can be re-used if the logic to load that data into the raw table changes. For example, to add a new column from the JSON data into BQ:
+
+1. Update the asset defition for `resort_raw`.  Test as usual in local and staging.
+2. Deploy to dagster updates to production.
+3. Remove the current "raw" data:
+
+```
+TRUNCATE TABLE `myhybrid-200215.snowreport.resort_raw`
+```
+
+4. Launch a backfill materialization for `resort_raw` against all paritions of the upstream assets. This will load the historical data in GCS for all days into the `resort_raw` table.
+
+**Note**: this backfill strategy only works for the raw table. Launching backfills for the resort assets will create _incorrect_ data, because Dagster will run the asset code for each historical day but the code is only able to pull resort data for the current day. This limitation is because the Snocountry API does not provide an "AS OF" query parameter. **DO NOT LAUNCH BACKFILLS FOR THE RESORT ASSETS**.
+
+**Corollary Note**: It is possible to add new resorts, but the new resorts will have data only _as of the date they were added to dagster_.
+
 ## Future Work
 
 - [ ] ~Add tests~
@@ -105,7 +132,7 @@ gcloud compute config-ssh
 - [ ] Figure out how to use Dagster partitions
     - [ ] ~add daily partitions to raw table and individual resorts~
     - [ ] update dagster version so `load_asset` in the ipynb works with partitions
-    - [ ] figure out if I can use backfills to _append_ data to my BQ raw table without such a hacky IO manager, perhaps using the partition key as the `report_date` field
+    - [ ] ~figure out if I can use backfills to _append_ data to my BQ raw table without such a hacky IO manager, perhaps using the partition key as the `report_date` field~
 - [ ] dbt
     - [ ] ~initial dbt setup~
     - [ ] local dbt should use duckdb instead of BQ

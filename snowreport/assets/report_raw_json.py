@@ -64,7 +64,7 @@ def resort_raw(context, **resort_assets) -> pd.DataFrame:
         
         add_to_summary = pd.DataFrame({
             "resort_name": resort['resortName'],
-            "report_date": pd.to_datetime(date.today()),
+            "report_date": pd.to_datetime(context.asset_partition_key_for_output()),
             "condition": resort['weatherToday_Condition'],	
             "condition_tomorrow": resort['weatherTomorrow_Condition'],		
             "low_today": pd.to_numeric(resort['weatherToday_Temperature_Low']),		
