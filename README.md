@@ -4,6 +4,8 @@ I live in the front range of Colorado, which means each ski weekend I have to ma
 
 This repository contains a dagster implementation. For each ski resort, an API request is made that returns weather, terrain status, snow conditions, and other resort details. The results of the requests are then stored in BigQuery, prepared for visualization, and presented in a dashboard.
 
+*Disclosure, I now work at Elementl, the makers of dagster. This [post](https://loppsided.blog/posts/2022-10-07-from-the-behemoth/) explains why I left Google Cloud, but this project cemented my enthusiasm for the product*.
+
 ![dashboard image](./snowreportv3.png)
 
 Report result: https://datastudio.google.com/reporting/136a93b3-8070-410a-a884-f0f657307d12
