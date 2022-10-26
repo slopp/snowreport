@@ -13,7 +13,8 @@ resort = {
     'weatherToday_Temperature_Low': ["30"],
     'weatherTomorrow_Temperature_Low': ["16"],
     'weatherToday_Temperature_High': ["48"],
-    'weatherTomorrow_Temperature_High': ["37"]
+    'weatherTomorrow_Temperature_High': ["37"],
+    'openDownHillTrails': ["1"]
 }
 
 resorts = {
@@ -30,7 +31,8 @@ RESULT_SCHEMA = {
     "low_today": int64,
     "low_tomorrow": int64,
     "high_today":	int64,
-    "high_tomorrow": int64
+    "high_tomorrow": int64,
+    "open_trails": int64
 }
 
 @pytest.mark.parametrize(
