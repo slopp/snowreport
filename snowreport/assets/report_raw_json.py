@@ -55,7 +55,8 @@ def resort_raw(context, **resort_assets) -> pd.DataFrame:
         "low_today": pd.to_numeric(resort['weatherToday_Temperature_Low']),		
         "low_tomorrow": pd.to_numeric(resort['weatherTomorrow_Temperature_Low']),		
         "high_today":	pd.to_numeric(resort['weatherToday_Temperature_High']),	
-        "high_tomorrow": pd.to_numeric(resort['weatherTomorrow_Temperature_High'])	
+        "high_tomorrow": pd.to_numeric(resort['weatherTomorrow_Temperature_High']),
+        "open_trails": 	pd.to_numeric(resort['openDownHillTrails'])
     })
 
     for resort_name in resorts[1:]:
@@ -70,7 +71,8 @@ def resort_raw(context, **resort_assets) -> pd.DataFrame:
             "low_today": pd.to_numeric(resort['weatherToday_Temperature_Low']),		
             "low_tomorrow": pd.to_numeric(resort['weatherTomorrow_Temperature_Low']),		
             "high_today":	pd.to_numeric(resort['weatherToday_Temperature_High']),	
-            "high_tomorrow": pd.to_numeric(resort['weatherTomorrow_Temperature_High'])	
+            "high_tomorrow": pd.to_numeric(resort['weatherTomorrow_Temperature_High']),
+            "open_trails": 	pd.to_numeric(resort['openDownHillTrails'])	
         })
         resort_summary = resort_summary.append(add_to_summary)
     
